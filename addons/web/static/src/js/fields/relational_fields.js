@@ -32,15 +32,27 @@ var qweb = core.qweb;
 // Many2one widgets
 //------------------------------------------------------------------------------
 
+/**
+* manages option 'create quick records' for relational fields
+*/
+
+AbstractField = AbstractField.extend({
+    init: function(parent){
+        this._super.apply(this, arguments)
+        this.nodeOptions = _.defaults(this.nodeOptions, {
+            no_quick_create: odoo.session_info.no_quick_create_records,
+        });
+    },
+})
+
 var M2ODialog = Dialog.extend({
     template: "M2ODialog",
     init: function (parent, name, value) {
         this.name = name;
         this.value = value;
-        this._super(parent, {
-            title: _.str.sprintf(_t("Create a %s"), this.name),
-            size: 'medium',
-            buttons: [{
+
+        var buttons = [
+            {
                 text: _t('Create'),
                 classes: 'btn-primary',
                 click: function () {
@@ -50,8 +62,9 @@ var M2ODialog = Dialog.extend({
                     } else {
                         this.$("input").focus();
                     }
-                },
-            }, {
+                }
+            },
+            {
                 text: _t('Create and edit'),
                 classes: 'btn-primary',
                 close: true,
@@ -61,10 +74,21 @@ var M2ODialog = Dialog.extend({
                         value: this.$('input').val(),
                     });
                 },
-            }, {
+            },
+            {
                 text: _t('Cancel'),
                 close: true,
-            }],
+            }
+        ];
+
+        if (odoo.session_info.no_quick_create_records) {
+            buttons.splice(0, 1);
+        }
+
+        this._super(parent, {
+            title: _.str.sprintf(_t("Create a %s"), this.name),
+            size: 'medium',
+            buttons: buttons
         });
     },
     start: function () {
