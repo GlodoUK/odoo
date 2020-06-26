@@ -2054,6 +2054,9 @@ class TestStockUOM(TestStockCommon):
         self.assertTrue(float_is_zero(reserved_on_move_lines_LtDA - quant_LtDA.reserved_quantity, precision_rounding=precision_rounding))
         self.assertTrue(float_is_zero(reserved_on_move_lines_GtDA - quant_GtDA.reserved_quantity, precision_rounding=precision_rounding))
 
+def patched_run(self, procurements):
+    for proc in procurements:
+        ProcurementGroup.run(self, *proc)
 
 @tagged('post_install')
 class TestRoutes(TestStockCommon):
