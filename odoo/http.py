@@ -1112,7 +1112,7 @@ class OpenERPSession(werkzeug.contrib.sessions.Session):
         if lang in babel.core.LOCALE_ALIASES:
             lang = babel.core.LOCALE_ALIASES[lang]
 
-        context['lang'] = lang or 'en_US'
+        context['lang'] = lang or 'en_GB'
 
     def save_action(self, action):
         """
@@ -1377,7 +1377,7 @@ class Root(object):
 
     def setup_lang(self, httprequest):
         if "lang" not in httprequest.session.context:
-            alang = httprequest.accept_languages.best or "en-US"
+            alang = httprequest.accept_languages.best or "en-GB"
             try:
                 code, territory, _, _ = babel.core.parse_locale(alang, sep='-')
                 if territory:
@@ -1385,7 +1385,7 @@ class Root(object):
                 else:
                     lang = babel.core.LOCALE_ALIASES[code]
             except (ValueError, KeyError):
-                lang = 'en_US'
+                lang = 'en_GB'
             httprequest.session.context["lang"] = lang
 
     def get_request(self, httprequest):
