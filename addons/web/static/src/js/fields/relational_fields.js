@@ -496,7 +496,7 @@ var FieldMany2One = AbstractField.extend({
                 });
 
                 // search more... if more results than limit
-                if (values.length > self.limit) {
+                if (values.length > 0) {
                     values = values.slice(0, self.limit);
                     values.push({
                         label: _t("Search More..."),
