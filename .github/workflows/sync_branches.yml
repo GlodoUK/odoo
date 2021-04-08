@@ -1,0 +1,33 @@
+name: Sync with Upstream
+
+on:
+  schedule:
+    - cron: '05 06 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync with odoo/odoo
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ODOO_VERSION: ["12.0", "13.0", "14.0"]
+
+    steps:
+      - name: Checkout glodouk/odoo@${{ matrix.ODOO_VERSION }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.ODOO_VERSION }}
+          fetch-depth: 0
+
+      - name: Add upstream remote odoo/odoo
+        run: git remote add upstream https://github.com/odoo/odoo.git
+
+      - name: Fetch upstream
+        run: git fetch upstream
+
+      - name: Merge upstream/${{ matrix.ODOO_VERSION }}
+        run: git merge upstream/${{ matrix.ODOO_VERSION }}
+
+      - name: Push merged into glodouk/odoo@${{ matrix.ODOO_VERSION }}
+        run: git push
