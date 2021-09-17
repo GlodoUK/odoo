@@ -180,10 +180,10 @@ class StockRule(models.Model):
         for preserves the original _run_pull
         """
 
-        Procurement = namedtuple('Procurement', ['product_id', 'product_qty', 'product_uom', 'location_id', 'name', 'origin', 'company_id', 'values'])
+        Procurement = namedtuple('Procurement', ['product_id', 'product_qty', 'product_uom', 'location_id', 'name', 'origin', 'values'])
         assert isinstance(values.get('company_id'), models.Model), "A RecordSet is expected here"
         procurements = []
-        procurements.append((Procurement(product_id, product_qty, product_uom, location_id, name, origin, values.get('company_id'), values), self))
+        procurements.append((Procurement(product_id, product_qty, product_uom, location_id, name, origin, values), self))
         return self._run_pull_new(procurements)
 
     @api.model
