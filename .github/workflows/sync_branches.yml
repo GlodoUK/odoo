@@ -1,31 +1,44 @@
-name: Sync with Upstream 
+name: Sync with Upstream
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   sync:
-    name: Sync with odoo/odoo
+    name: Sync ${{ matrix.ODOO_VERSION }} with odoo/odoo
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        ODOO_VERSION: ["14.0", "15.0", "16.0"]
+        ODOO_VERSION: ["14.0", "15.0", "16.0", "17.0", "18.0", "19.0", "20.0"]
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+      UPSTREAM: odoo/odoo
+      BRANCH: ${{ matrix.ODOO_VERSION }}
 
     steps:
-      - name: Checkout glodouk/odoo@${{ matrix.ODOO_VERSION }}
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ matrix.ODOO_VERSION }}
-          fetch-depth: 0
+      - name: Sync or create ${{ matrix.ODOO_VERSION }}
+        run: |
+          set -euo pipefail
 
-      - name: Add upstream remote odoo/odoo
-        run: git remote add upstream https://github.com/odoo/odoo.git
+          # Does the branch exist upstream at all?
+          if ! UPSTREAM_SHA=$(gh api "repos/$UPSTREAM/git/ref/heads/$BRANCH" --jq .object.sha 2>/dev/null); then
+            echo "::notice::$UPSTREAM has no branch $BRANCH, skipping"
+            exit 0
+          fi
 
-      - name: Fetch upstream
-        run: git fetch upstream
-
-      - name: Merge upstream/${{ matrix.ODOO_VERSION }}
-        run: git merge upstream/${{ matrix.ODOO_VERSION }}
-
-      - name: Push merged into glodouk/odoo@${{ matrix.ODOO_VERSION }}
-        run: git push
+          if gh api "repos/$REPO/branches/$BRANCH" --silent 2>/dev/null; then
+            # Branch exists in the fork: let GitHub merge upstream server-side
+            gh api -X POST "repos/$REPO/merge-upstream" -f branch="$BRANCH" \
+              --jq '"\(.merge_type): \(.message)"'
+          else
+            # Branch missing in the fork: create it pointing at upstream's head
+            gh api -X POST "repos/$REPO/git/refs" \
+              -f ref="refs/heads/$BRANCH" -f sha="$UPSTREAM_SHA" --silent
+            echo "::notice::Created $BRANCH from $UPSTREAM@$UPSTREAM_SHA"
+          fi
